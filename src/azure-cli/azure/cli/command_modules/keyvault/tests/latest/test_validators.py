@@ -8,7 +8,10 @@ import unittest
 from knack.arguments import CLICommandArgument
 from knack.util import CLIError
 
-from azure.cli.command_modules.keyvault._validators import validate_vault_name_and_hsm_name
+from azure.cli.command_modules.keyvault._validators import (
+    validate_deleted_vault_or_hsm_name,
+    validate_vault_name_and_hsm_name,
+)
 
 
 class _Command:
@@ -39,9 +42,18 @@ class KeyVaultValidatorsTest(unittest.TestCase):
         with self.assertRaisesRegex(CLIError, r'Please specify --vault-name or --hsm-name\.'):
             validate_vault_name_and_hsm_name(_Namespace(vault_name_options=['--vault-name']))
 
+        # fall back to --vault-name when the vault name argument can't be resolved
+        with self.assertRaisesRegex(CLIError, r'Please specify --vault-name or --hsm-name\.'):
+            validate_vault_name_and_hsm_name(_Namespace())
+
         # no exception when just one of them is specified
         validate_vault_name_and_hsm_name(_Namespace(vault_name_options=['--name', '-n'], vault_name='vault'))
         validate_vault_name_and_hsm_name(_Namespace(vault_name_options=['--name', '-n'], hsm_name='hsm'))
+
+    def test_validate_deleted_vault_or_hsm_name(self):
+        ns = _Namespace(vault_name_options=['--name', '-n'])
+        with self.assertRaisesRegex(CLIError, r'Please specify --name/-n or --hsm-name\.'):
+            validate_deleted_vault_or_hsm_name(ns.cmd, ns)
 
 
 if __name__ == '__main__':

@@ -136,7 +136,8 @@ def _get_vault_name_options(ns):
     as it can be either --vault-name or --name/-n."""
     default_options = '--vault-name'
     cmd = getattr(ns, 'cmd', None)
-    argument = cmd.arguments.get('vault_name', None) if cmd else None
+    arguments = getattr(cmd, 'arguments', None) or {}
+    argument = arguments.get('vault_name', None)
     options_list = argument.options_list if argument else None
     if not options_list:
         return default_options
